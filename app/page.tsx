@@ -76,6 +76,37 @@ const generateMockFiveWhy = (problem: string) => {
   }
 }
 
+function ChatbotFloating() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        className="fixed bottom-6 right-6 z-50 bg-primary text-white rounded-full shadow-lg p-4 flex items-center gap-2 hover:bg-orange-700 transition"
+        onClick={() => setOpen(true)}
+        aria-label="Open Chatbot"
+      >
+        <MessageCircle className="w-6 h-6" />
+        <span className="font-semibold hidden md:inline">Chatbot</span>
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-end bg-black/30">
+          <div className="relative w-full max-w-md md:max-w-xl m-4 md:m-12" onClick={e => e.stopPropagation()}>
+            <Chatbot />
+            <button
+              className="absolute top-3 right-3 bg-accent text-white rounded-full p-2 shadow hover:bg-orange-700 transition"
+              onClick={() => setOpen(false)}
+              aria-label="Close Chatbot"
+              style={{ zIndex: 60 }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function Home() {
   const [problem, setProblem] = useState('')
   const [ishikawaData, setIshikawaData] = useState<ReturnType<typeof generateMockIshikawa> | null>(null)
@@ -89,7 +120,7 @@ export default function Home() {
     setLoading(true)
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     setIshikawaData(generateMockIshikawa(problem))
     setFiveWhyData(generateMockFiveWhy(problem))
     setActiveTab('ishikawa')
@@ -120,17 +151,15 @@ export default function Home() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="input">Input</TabsTrigger>
             <TabsTrigger value="ishikawa" disabled={!ishikawaData}>Ishikawa</TabsTrigger>
             <TabsTrigger value="five-why" disabled={!fiveWhyData}>5 Why</TabsTrigger>
-            <TabsTrigger value="chatbot"><MessageCircle className="inline w-4 h-4 mr-1" />Chatbot</TabsTrigger>
             <TabsTrigger value="eightd"><FileText className="inline w-4 h-4 mr-1" />8D Docs</TabsTrigger>
           </TabsList>
-          {/* Chatbot Tab */}
-          <TabsContent value="chatbot">
-            <Chatbot />
-          </TabsContent>
+
+          {/* Floating Chatbot Button and Modal */}
+          <ChatbotFloating />
 
           {/* 8D Document Upload/History Tab */}
           <TabsContent value="eightd">
