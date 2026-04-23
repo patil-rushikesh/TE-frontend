@@ -7,6 +7,7 @@ import Chatbot from '@/components/chatbot'
 import EightDManager from '@/components/eightd-manager'
 import { FiveWhyAnalysis } from '@/components/five-why-analysis'
 import { IshikawaDiagram } from '@/components/ishikawa-diagram'
+import { IshikawaImageRequest } from '@/components/ishikawa-image-request'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -453,13 +454,16 @@ export default function Home() {
 
           <TabsContent value="ishikawa" className="mt-6">
             {ishikawaData ? (
-              <IshikawaDiagram
-                problem={problem}
-                data={ishikawaData}
-                busy={isBusy}
-                onRegenerate={handleIshikawaRegenerate}
-                onFinalize={handleIshikawaFinalize}
-              />
+              <>
+                <IshikawaDiagram
+                  problem={problem}
+                  data={ishikawaData}
+                  busy={isBusy}
+                  onRegenerate={handleIshikawaRegenerate}
+                  onFinalize={handleIshikawaFinalize}
+                />
+                <IshikawaImageRequest problem={problem} data={ishikawaData} />
+              </>
             ) : null}
           </TabsContent>
 
