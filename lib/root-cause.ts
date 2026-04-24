@@ -16,6 +16,7 @@ export interface IshikawaResultItem {
   cause: string
   evidence: string
   severity: string
+  immediate_action: boolean
 }
 
 export interface IshikawaCategory {
@@ -89,15 +90,24 @@ export function createEmptyIshikawaItem(): IshikawaResultItem {
     cause: '',
     evidence: '',
     severity: '',
+    immediate_action: false,
   }
 }
 
 function sanitizeIshikawaItem(item: Partial<IshikawaResultItem> | null | undefined) {
+  const severity = typeof item?.severity === 'string' ? item.severity : ''
+  // Derive immediate_action from severity if not explicitly provided by the API
+  const immediateAction =
+    typeof item?.immediate_action === 'boolean'
+      ? item.immediate_action
+      : ['high', 'critical'].includes(severity.trim().toLowerCase())
+
   return {
     sub_category: typeof item?.sub_category === 'string' ? item.sub_category : '',
     cause: typeof item?.cause === 'string' ? item.cause : '',
     evidence: typeof item?.evidence === 'string' ? item.evidence : '',
-    severity: typeof item?.severity === 'string' ? item.severity : '',
+    severity,
+    immediate_action: immediateAction,
   }
 }
 

@@ -27,11 +27,11 @@ const STATUS_OPTIONS: Array<{
   value: CauseStatus
   className: string
 }> = [
-  { label: 'Confirmed as Cause', value: 'confirmed', className: 'text-red-600' },
-  { label: 'Possible Cause', value: 'possible', className: 'text-orange-600' },
-  { label: 'Excluded as Cause', value: 'excluded', className: 'text-green-600' },
-  { label: 'N/A', value: 'na', className: 'text-slate-700' },
-]
+    { label: 'Confirmed as Cause', value: 'confirmed', className: 'text-red-600' },
+    { label: 'Possible Cause', value: 'possible', className: 'text-orange-600' },
+    { label: 'Excluded as Cause', value: 'excluded', className: 'text-green-600' },
+    { label: 'N/A', value: 'na', className: 'text-slate-700' },
+  ]
 
 const TABLE_GROUPS = [CANONICAL_BONES.slice(0, 3), CANONICAL_BONES.slice(3)]
 
@@ -134,26 +134,26 @@ export function IshikawaDiagram({
       category: category.category,
       result: editableCells[categoryIndex]
         ?.filter((item, rowIndex) => (!onlyLocked || lockedCells[categoryIndex]?.[rowIndex]) && isMeaningfulIshikawaItem(item))
-        .map(({ status: _status, ...item }) => item) ?? [],
+        .map(({ status: _status, ...item }) => item as IshikawaResultItem) ?? [],
     }))
 
   const handleCellChange = (
     categoryIndex: number,
     rowIndex: number,
-    field: keyof IshikawaResultItem | 'status',
+    field: Exclude<keyof IshikawaResultItem, 'immediate_action'> | 'status',
     value: string,
   ) => {
     setEditableCells((previous) =>
       previous.map((categoryItems, currentCategoryIndex) =>
         currentCategoryIndex === categoryIndex
           ? categoryItems.map((item, currentRowIndex) =>
-              currentRowIndex === rowIndex
-                ? {
-                    ...item,
-                    [field]: value,
-                  }
-                : item,
-            )
+            currentRowIndex === rowIndex
+              ? {
+                ...item,
+                [field]: value,
+              }
+              : item,
+          )
           : categoryItems.map((item) => cloneEditableItem(item)),
       ),
     )
@@ -164,17 +164,25 @@ export function IshikawaDiagram({
       previous.map((rowLocks, currentCategoryIndex) =>
         currentCategoryIndex === categoryIndex
           ? rowLocks.map((isLocked, currentRowIndex) =>
-              currentRowIndex === rowIndex ? !isLocked : isLocked,
-            )
+            currentRowIndex === rowIndex ? !isLocked : isLocked,
+          )
           : [...rowLocks],
       ),
     )
   }
 
   const handleFinalize = async () => {
-    const finalData = serializeCells(false)
+    // Full data (all items) — used for export and locking the UI
+    const fullData = serializeCells(false)
     setLocked(true)
-    await onFinalize?.(finalData)
+
+    // For 5 Why's: only send causes marked for immediate action (High / Critical severity)
+    const filteredData = fullData.map((category) => ({
+      ...category,
+      result: category.result.filter((item) => item.immediate_action),
+    }))
+
+    await onFinalize?.(filteredData)
   }
 
   const handleExport = () => {
@@ -282,6 +290,9 @@ export function IshikawaDiagram({
             {item.severity.trim() ? (
               <Badge variant={getEvidenceTone(item.severity)}>{item.severity}</Badge>
             ) : null}
+            <Badge variant={item.immediate_action ? 'default' : 'outline'} className={item.immediate_action ? 'bg-green-600 text-white hover:bg-green-700' : 'text-slate-500'}>
+              {item.immediate_action ? 'Include' : 'Excluded'}
+            </Badge>
           </div>
         </div>
       </td>
