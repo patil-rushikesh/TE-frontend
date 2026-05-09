@@ -8,3 +8,9 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
+
+.env
+.env.local
+.env.development
+.env.test
+.env.production
