@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { type FiveWhyChainItem, normalizeFiveWhyAnalysis } from '@/lib/root-cause'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+
 function clampConfidence(value: string) {
   const parsed = Number(value)
 
@@ -187,10 +189,15 @@ export function FiveWhyAnalysis({
     setImageLoading(true)
     setImageError(null)
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+
     try {
-      const response = await fetch('http://localhost:4000/generate-five-why', {
+      const response = await fetch(`${API_BASE_URL}/generate-five-why`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           problem,
           analysis: serializeAnalysis(false),

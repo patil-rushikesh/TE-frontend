@@ -197,12 +197,20 @@ async function apiRequest<T>(path: string, body: unknown, timeoutMs = 120_000): 
   const controller = new AbortController()
   const timerId = setTimeout(() => controller.abort(), timeoutMs)
 
+  // Get auth token from localStorage
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   try {
     const response = await fetch(`${API_ROOT}${path}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal,
     })

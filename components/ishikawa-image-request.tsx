@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { type IshikawaCategory } from '@/lib/root-cause'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+
 export function IshikawaImageRequest({
   problem,
   data
@@ -21,20 +23,18 @@ export function IshikawaImageRequest({
     setLoading(true)
     setError(null)
 
-    // Transform data to the format the local server expects
-    
-
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
     const payload = {
       problem,
-      data
+      data,
     }
 
     try {
-      console.log(payload)
-      const response = await fetch('http://localhost:4000/generate', {
+      const response = await fetch(`${API_BASE_URL}/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(payload),
       })
@@ -71,7 +71,7 @@ export function IshikawaImageRequest({
           <div className="space-y-1">
             <h3 className="text-lg font-semibold">Generate Visual Diagram</h3>
             <p className="text-sm text-muted-foreground">
-              Send the current data to the local server (Port 4000) to render a PNG image.
+              Send the current data to the backend server (Port 8000) to render a PNG image.
             </p>
           </div>
           <Button onClick={generateImage} disabled={loading || !data.length}>
