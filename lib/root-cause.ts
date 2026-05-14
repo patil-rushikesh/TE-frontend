@@ -34,6 +34,7 @@ export interface RootCauseProblemRequest {
 export interface RootCauseProblemResponse {
   success: boolean
   ishikawa: IshikawaCategory[]
+  main_cause?: string[]
 }
 
 export interface RootCauseRegenerateRequest extends RootCauseProblemRequest {
@@ -43,6 +44,7 @@ export interface RootCauseRegenerateRequest extends RootCauseProblemRequest {
 export interface RootCauseRegenerateResponse {
   success: boolean
   ishikawa: IshikawaCategory[]
+  main_cause?: string[]
 }
 
 export interface FiveWhyStep {
@@ -60,6 +62,7 @@ export interface FiveWhyChainItem {
 
 export interface RootCauseFiveWhyRequest extends RootCauseProblemRequest {
   ishikawa: IshikawaCategory[]
+  main_cause?: string[]
 }
 
 export interface RootCauseFiveWhyResponse {

@@ -239,7 +239,13 @@ export function FiveWhyAnalysis({
         </div>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className={`grid gap-4 ${
+        draftAnalysis.length === 1
+          ? 'grid-cols-1'
+          : draftAnalysis.length === 2
+            ? 'xl:grid-cols-2'
+            : 'lg:grid-cols-2 xl:grid-cols-3'
+      }`}>
         {draftAnalysis.map((item, rowIndex) => {
           const isRowLocked = lockedRows[rowIndex]
 

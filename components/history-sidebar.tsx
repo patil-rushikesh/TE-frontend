@@ -23,6 +23,7 @@ interface HistorySidebarProps {
     domain: string
     ishikawa: IshikawaCategory[]
     fiveWhys: FiveWhyChainItem[]
+    main_cause?: string[]
   }) => void
   refreshTrigger?: number
 }
@@ -102,14 +103,16 @@ export function HistorySidebar({ onLoad, refreshTrigger }: HistorySidebarProps) 
     setDetailSession(session)
   }
 
-  const handleLoadIntoApp = (session: HistorySession) => {
+  const handleLoadSession = (session: HistorySession) => {
     onLoad({
       query: session.query,
-      domain: session.domain,
+      domain: session.domain || 'General',
       ishikawa: session.ishikawa,
       fiveWhys: session.five_whys,
+      main_cause: session.main_cause,
     })
     setDetailSession(null)
+    setActiveId(null)
   }
 
   const closeDetail = () => {
@@ -488,7 +491,7 @@ export function HistorySidebar({ onLoad, refreshTrigger }: HistorySidebarProps) 
               <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
                 {/* Load into editor button */}
                 <button
-                  onClick={() => handleLoadIntoApp(detailSession)}
+                  onClick={() => handleLoadSession(detailSession)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',

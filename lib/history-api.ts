@@ -17,6 +17,7 @@ export interface SaveAnalysisRequest extends SecurityTriplet {
   part_number?: string
   ishikawa: IshikawaCategory[]
   analysis: FiveWhyChainItem[]
+  main_cause?: string[]
 }
 
 export interface SaveAnalysisResponse {
@@ -40,6 +41,7 @@ export interface HistorySession {
   created_at: string
   cause_count: number
   root_causes: string[]
+  main_cause?: string[]
   ishikawa: IshikawaCategory[]
   five_whys: FiveWhyChainItem[]
 }
