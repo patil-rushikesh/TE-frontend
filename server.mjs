@@ -39,7 +39,7 @@ function transformDataFiveWhy(input) {
   return output
 }
 // ✅ Generate HTML UI
-function generateHTML(data, problem) {
+function generateHTML(data, problem, mainCause = []) {
   const statusClass = (s) => {
     if (s?.toLowerCase() === "high")   return "confirmed";
     if (s?.toLowerCase() === "medium") return "possible";
@@ -175,14 +175,19 @@ function generateHTML(data, problem) {
 
   .effect-row { display: flex; align-items: stretch; margin: 1px 0; gap: 0; }
   .cause-arrow-bar {
-    flex: 1; min-height: 38px; background: #d96e14;
-    clip-path: polygon(0 22%, calc(100% - 20px) 22%, calc(100% - 20px) 0%,
-                       100% 50%, calc(100% - 20px) 100%, calc(100% - 20px) 78%, 0 78%);
-    display: flex; align-items: center; padding-left: 16px;
+    flex: 1; min-height: 48px; background: #d96e14;
+    clip-path: polygon(0 0, calc(100% - 25px) 0, 100% 50%, calc(100% - 25px) 100%, 0 100%);
+    display: flex; align-items: center; justify-content: center; padding: 8px 36px 8px 16px;
   }
   .cause-label {
     font-size: 13px; font-weight: 800; color: #fff;
     letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .main-causes-list {
+    display: flex; gap: 8px; font-size: 10px; font-weight: 600; color: #fff; text-align: center; justify-content: center; flex-wrap: wrap; width: 100%;
+  }
+  .main-cause-item {
+    background: rgba(0, 0, 0, 0.2); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.3); max-width: 30%; line-height: 1.3;
   }
   .effect-sep {
     display: flex; align-items: center; padding: 0 8px;
@@ -219,7 +224,12 @@ function generateHTML(data, problem) {
   </div>
 
   <div class="effect-row">
-    <div class="cause-arrow-bar"><span class="cause-label">Cause</span></div>
+    <div class="cause-arrow-bar">
+      ${mainCause && mainCause.length > 0
+        ? `<div class="main-causes-list">${mainCause.map(c => `<span class="main-cause-item">${c}</span>`).join('')}</div>`
+        : `<span class="cause-label">Cause</span>`
+      }
+    </div>
     <div class="effect-sep">
       <span class="effect-arrow">➤</span>
       <span class="effect-word">Effect</span>
@@ -506,7 +516,7 @@ app.post("/generate", async (req, res) => {
     const transformedData = transformData(rawData)
 
     // Generate HTML
-    const html = generateHTML(transformedData, rawData.problem)
+    const html = generateHTML(transformedData, rawData.problem, rawData.mainCause)
 
     // Launch browser
     const browser = await puppeteer.launch({

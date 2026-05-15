@@ -13,6 +13,7 @@ interface SaveAnalysisModalProps {
   pastRecord: number
   ishikawa: IshikawaCategory[]
   fiveWhys: FiveWhyChainItem[]
+  mainCause?: string[]
 }
 
 export function SaveAnalysisModal({
@@ -23,6 +24,7 @@ export function SaveAnalysisModal({
   pastRecord,
   ishikawa,
   fiveWhys,
+  mainCause,
 }: SaveAnalysisModalProps) {
   const [sessionTitle, setSessionTitle] = useState('')
   const [ticketRef, setTicketRef] = useState('')
@@ -59,6 +61,7 @@ export function SaveAnalysisModal({
         part_number: partNumber.trim() || undefined,
         ishikawa,
         analysis: fiveWhys,
+        main_cause: mainCause,
       }
       const res = await historyApi.saveAnalysis(body)
       if (res.success) {

@@ -40,7 +40,9 @@ function SectionDivider({ label }: { label: string }) {
 
 // ─── Ishikawa read-only view ──────────────────────────────────────────────────
 
-function IshikawaReadOnly({ problem, data }: { problem: string; data: IshikawaCategory[] }) {
+import React from 'react'
+
+function IshikawaReadOnly({ problem, data, mainCause }: { problem: string; data: IshikawaCategory[]; mainCause?: string[] }) {
   const normalized = normalizeIshikawaCategories(data)
   const TABLE_GROUPS = [CANONICAL_BONES.slice(0, 3), CANONICAL_BONES.slice(3)] as const
   const rowCount = Math.max(3, ...normalized.map(c => c.result.filter(isMeaningfulIshikawaItem).length || 3))
@@ -61,10 +63,28 @@ function IshikawaReadOnly({ problem, data }: { problem: string; data: IshikawaCa
       </div>
 
       {TABLE_GROUPS.map((group, gi) => (
-        <div key={gi} style={{
-          overflowX: 'auto', borderRadius: 16, border: '1px solid #f1f5f9',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.02)', background: '#fff',
-        }}>
+        <React.Fragment key={gi}>
+          {gi === 1 && mainCause && mainCause.length > 0 && (
+            <div style={{ padding: '20px 24px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316' }} />
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Primary Root Causes (From History)
+                </span>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {mainCause.map((cause, idx) => (
+                  <li key={idx} style={{ fontSize: 14, color: '#431407', fontWeight: 600, lineHeight: 1.4 }}>
+                    {cause}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div style={{
+            overflowX: 'auto', borderRadius: 16, border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.02)', background: '#fff',
+          }}>
           <table style={{ minWidth: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
@@ -170,7 +190,8 @@ function IshikawaReadOnly({ problem, data }: { problem: string; data: IshikawaCa
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </React.Fragment>
       ))}
     </div>
   )
@@ -324,9 +345,10 @@ export interface HistoryViewerProps {
   createdAt?: string
   ishikawa: IshikawaCategory[]
   fiveWhys: FiveWhyChainItem[]
+  mainCause?: string[]
 }
 
-export function HistoryViewer({ problem, domain, createdAt, ishikawa, fiveWhys }: HistoryViewerProps) {
+export function HistoryViewer({ problem, domain, createdAt, ishikawa, fiveWhys, mainCause }: HistoryViewerProps) {
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString('en-US', {
         weekday: 'long', month: 'long', day: 'numeric',
@@ -365,7 +387,7 @@ export function HistoryViewer({ problem, domain, createdAt, ishikawa, fiveWhys }
       {/* Ishikawa */}
       <SectionDivider label="Ishikawa Root Cause Mapping" />
       {ishikawa.length > 0
-        ? <IshikawaReadOnly problem={problem} data={ishikawa} />
+        ? <IshikawaReadOnly problem={problem} data={ishikawa} mainCause={mainCause} />
         : <div style={{ padding: '40px', textAlign: 'center', background: '#f8fafc', borderRadius: 16 }}>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>No Ishikawa diagram data available.</p>
           </div>

@@ -112,6 +112,7 @@ export default function Home() {
   const [pastRecord, setPastRecord] = useState(String(CURRENT_YEAR))
   const [ishikawaData, setIshikawaData] = useState<IshikawaCategory[] | null>(null)
   const [fiveWhyData, setFiveWhyData] = useState<FiveWhyChainItem[] | null>(null)
+  const [mainCause, setMainCause] = useState<string[] | undefined>(undefined)
   const [finalSummary, setFinalSummary] = useState<Record<string, unknown> | null>(null)
   const [busyAction, setBusyAction] = useState<BusyAction>(null)
   const [activeTab, setActiveTab] = useState('input')
@@ -123,7 +124,7 @@ export default function Home() {
   const apiBaseUrl = useMemo(() => getRootCauseApiBaseUrl(), [])
 
   // ── Auto-save helper — uses problem statement as session title, no modal ──
-  const autoSave = useCallback(async (ishikawa: IshikawaCategory[], fiveWhys: FiveWhyChainItem[], query: string) => {
+  const autoSave = useCallback(async (ishikawa: IshikawaCategory[], fiveWhys: FiveWhyChainItem[], query: string, mainCause?: string[]) => {
     setSaveToast('saving')
     try {
       const triplet = storeOrGetTriplet()
@@ -135,6 +136,7 @@ export default function Home() {
         session_title: query.trim().slice(0, 120), // problem statement IS the title
         ishikawa,
         analysis: fiveWhys,
+        main_cause: mainCause,
       })
       if (res.success) {
         setSaveToast('saved')
@@ -156,11 +158,12 @@ export default function Home() {
       const raw = sessionStorage.getItem('te_load_session')
       if (raw) {
         sessionStorage.removeItem('te_load_session')
-        const s = JSON.parse(raw) as { query: string; domain: string; ishikawa: IshikawaCategory[]; fiveWhys: FiveWhyChainItem[] }
+        const s = JSON.parse(raw) as { query: string; domain: string; ishikawa: IshikawaCategory[]; fiveWhys: FiveWhyChainItem[]; main_cause?: string[] }
         setProblem(s.query)
         setDomain(s.domain)
         setIshikawaData(normalizeIshikawaCategories(s.ishikawa))
         setFiveWhyData(normalizeFiveWhyAnalysis(s.fiveWhys))
+        setMainCause(s.main_cause)
         setFinalSummary(null)
         setActiveTab('ishikawa')
       }
@@ -208,7 +211,19 @@ export default function Home() {
     setFinalSummary(null)
     try {
       const res = await rootCauseApi.generateProblem(requestPayload)
-      setIshikawaData(normalizeIshikawaCategories(res.ishikawa))
+      const normalizedIshikawa = normalizeIshikawaCategories(res.ishikawa)
+      setIshikawaData(normalizedIshikawa)
+      
+      // Pick top 3 causes sorted by severity (Critical > High > Medium > Low)
+      const severityRank: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 }
+      const defaultCauses = normalizedIshikawa
+        .flatMap(cat => cat.result)
+        .filter(item => item.cause?.trim())
+        .sort((a, b) => (severityRank[b.severity] ?? 0) - (severityRank[a.severity] ?? 0))
+        .slice(0, 3)
+        .map(item => item.cause.trim())
+      
+      setMainCause(defaultCauses)
       startTransition(() => setActiveTab('ishikawa'))
     } catch (err) { setErrorMessage(getErrorMessage(err)) }
     finally { setBusyAction(null) }
@@ -222,7 +237,19 @@ export default function Home() {
     setFinalSummary(null)
     try {
       const res = await rootCauseApi.regenerateIshikawa({ ...requestPayload, locked_result: lockedData })
-      setIshikawaData(normalizeIshikawaCategories(res.ishikawa))
+      const normalizedIshikawa = normalizeIshikawaCategories(res.ishikawa)
+      setIshikawaData(normalizedIshikawa)
+      
+      // Pick top 3 causes sorted by severity (Critical > High > Medium > Low)
+      const severityRank: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 }
+      const defaultCauses = normalizedIshikawa
+        .flatMap(cat => cat.result)
+        .filter(item => item.cause?.trim())
+        .sort((a, b) => (severityRank[b.severity] ?? 0) - (severityRank[a.severity] ?? 0))
+        .slice(0, 3)
+        .map(item => item.cause.trim())
+      
+      setMainCause(defaultCauses)
     } catch (err) { setErrorMessage(getErrorMessage(err)) }
     finally { setBusyAction(null) }
   }
@@ -245,7 +272,7 @@ export default function Home() {
         ...cat,
         result: cat.result.filter(item => item.immediate_action),
       }))
-      const res = await rootCauseApi.generateFiveWhy({ ...requestPayload, ishikawa: filteredForFiveWhy })
+      const res = await rootCauseApi.generateFiveWhy({ ...requestPayload, ishikawa: filteredForFiveWhy, main_cause: mainCause })
       const normalized5Why = normalizeFiveWhyAnalysis(res.analysis)
       setFiveWhyData(normalized5Why)
       startTransition(() => setActiveTab('five-why'))
@@ -291,11 +318,12 @@ export default function Home() {
   }
 
   // History sidebar load
-  const handleHistoryLoad = (session: { query: string; domain: string; ishikawa: IshikawaCategory[]; fiveWhys: FiveWhyChainItem[] }) => {
+  const handleHistoryLoad = (session: { query: string; domain: string; ishikawa: IshikawaCategory[]; fiveWhys: FiveWhyChainItem[]; main_cause?: string[] }) => {
     setProblem(session.query)
     setDomain(session.domain)
     setIshikawaData(normalizeIshikawaCategories(session.ishikawa))
     setFiveWhyData(normalizeFiveWhyAnalysis(session.fiveWhys))
+    setMainCause(session.main_cause)
     setFinalSummary(null)
     setErrorMessage(null)
     setActiveTab('ishikawa')
@@ -507,13 +535,15 @@ export default function Home() {
                       <IshikawaDiagram
                         problem={problem}
                         data={ishikawaData}
+                        mainCause={mainCause}
+                        onMainCauseChange={setMainCause}
                         busy={isBusy}
                         onRegenerate={handleIshikawaRegenerate}
                         onFinalize={handleIshikawaFinalize}
                       />
                     </Card>
                     <div style={{ textAlign: 'center' }}>
-                      <IshikawaImageRequest problem={problem} data={ishikawaData} />
+                      <IshikawaImageRequest problem={problem} data={ishikawaData} mainCause={mainCause} />
                     </div>
                   </div>
                 )}

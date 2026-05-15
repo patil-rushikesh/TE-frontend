@@ -10,10 +10,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_IMAGE_URL ?? 'http://local
 
 export function IshikawaImageRequest({
   problem,
-  data
+  data,
+  mainCause = [],
 }: {
   problem: string
   data: IshikawaCategory[]
+  mainCause?: string[]
 }) {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -27,6 +29,7 @@ export function IshikawaImageRequest({
     const payload = {
       problem,
       data,
+      mainCause,
     }
 
     try {

@@ -78,12 +78,16 @@ function getEvidenceTone(severity: string) {
 export function IshikawaDiagram({
   problem,
   data,
+  mainCause,
+  onMainCauseChange,
   busy = false,
   onFinalize,
   onRegenerate,
 }: {
   problem: string
   data: IshikawaCategory[]
+  mainCause?: string[]
+  onMainCauseChange?: (val: string[]) => void
   busy?: boolean
   onFinalize?: (finalData: IshikawaCategory[]) => void | Promise<void>
   onRegenerate?: (lockedData: IshikawaCategory[]) => void | Promise<void>
@@ -321,7 +325,37 @@ export function IshikawaDiagram({
 
       <div className="space-y-6 p-6">
         {TABLE_GROUPS.map((group, tableIndex) => (
-          <div key={group.join('-')} className="overflow-x-auto rounded-xl border border-border">
+          <div key={group.join('-')}>
+            {tableIndex === 1 && (
+              <div className="my-6 rounded-xl border border-orange-200 bg-orange-50/50 p-5 shadow-sm">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-orange-800">
+                  <span className="size-2 rounded-full bg-orange-500" />
+                  Primary Root Causes (From History)
+                </h3>
+                {locked ? (
+                  <ul className="space-y-2 pl-1">
+                    {(mainCause || []).map((cause, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm font-medium text-slate-700">
+                        <span className="mt-0.5 text-orange-500">•</span>
+                        <span className="leading-relaxed">{cause}</span>
+                      </li>
+                    ))}
+                    {(!mainCause || mainCause.length === 0) && (
+                      <li className="text-sm italic text-slate-500">No primary root causes specified.</li>
+                    )}
+                  </ul>
+                ) : (
+                  <Textarea
+                    placeholder="Enter main causes here, separated by the | symbol (e.g. Cause A | Cause B)..."
+                    value={(mainCause || []).join(' | ')}
+                    onChange={(e) => onMainCauseChange?.(e.target.value.split('|').map(s => s.trim()).filter(Boolean))}
+                    className="min-h-[80px] bg-white text-sm border-orange-200 focus:border-orange-500 focus:ring-orange-200 resize-y"
+                    disabled={busy}
+                  />
+                )}
+              </div>
+            )}
+            <div className="overflow-x-auto rounded-xl border border-border mb-6">
             <table className="min-w-full border-collapse">
               <thead>
                 <tr>
@@ -350,6 +384,7 @@ export function IshikawaDiagram({
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         ))}
 
